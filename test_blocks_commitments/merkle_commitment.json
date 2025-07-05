@@ -1,0 +1,79 @@
+{
+    "commitment_type": "merkle_tree",
+    "hash_algorithm": "SHA3-256",
+    "root_hash": [
+        "65f56ee3fb12c96bb8ccb6a2ade2d7447d13d4cacbf1f7b6d5dd5e989b4385ff"
+    ],
+    "total_blocks": 4,
+    "data_blocks": 4,
+    "empty_blocks": 0,
+    "blocks_power_of_2": true,
+    "target_block_size_mb": 2.0,
+    "timestamp": "2025-07-05T16:49:34.021296",
+    "block_metadata": [
+        {
+            "block_id": "block_0001",
+            "hash": "e040e6e36ec7fb3ef5466355af348b6ab24c313b9694955d19081df077e4a8ee",
+            "row_count": 15308,
+            "size_bytes": 2128185,
+            "size_mb": 2.029595375061035,
+            "is_empty": false,
+            "timestamp": "2025-07-05T16:49:33.707365",
+            "authentication_path": [
+                "eb7c0ef7d30c1bef6ab0081f42d2a1ed510d14c9666e08c6f9be3e0b577f3a61",
+                "759eacde7a895133a11727cfd98fe20ca07489514ddca67dabbf19f020ec256d"
+            ]
+        },
+        {
+            "block_id": "block_0002",
+            "hash": "eb7c0ef7d30c1bef6ab0081f42d2a1ed510d14c9666e08c6f9be3e0b577f3a61",
+            "row_count": 14851,
+            "size_bytes": 2074785,
+            "size_mb": 1.9786691665649414,
+            "is_empty": false,
+            "timestamp": "2025-07-05T16:49:33.874063",
+            "authentication_path": [
+                "e040e6e36ec7fb3ef5466355af348b6ab24c313b9694955d19081df077e4a8ee",
+                "759eacde7a895133a11727cfd98fe20ca07489514ddca67dabbf19f020ec256d"
+            ]
+        },
+        {
+            "block_id": "block_0003",
+            "hash": "7bcb6d061490248dc7d5dc992081e89360f7f18a072e4a7a325e599f74ef5678",
+            "row_count": 14835,
+            "size_bytes": 2073595,
+            "size_mb": 1.977534294128418,
+            "is_empty": false,
+            "timestamp": "2025-07-05T16:49:33.978061",
+            "authentication_path": [
+                "4693a41cc6bc5456c342cd72d9c7916ffad90b3725461c583fcc6ecd4a24e3f3",
+                "55725f4f8e692565a926164e1f9364aa6b2db70b466b0fd49ba09e49c7055ae9"
+            ]
+        },
+        {
+            "block_id": "block_0004",
+            "hash": "4693a41cc6bc5456c342cd72d9c7916ffad90b3725461c583fcc6ecd4a24e3f3",
+            "row_count": 5006,
+            "size_bytes": 699459,
+            "size_mb": 0.6670560836791992,
+            "is_empty": false,
+            "timestamp": "2025-07-05T16:49:34.015496",
+            "authentication_path": [
+                "7bcb6d061490248dc7d5dc992081e89360f7f18a072e4a7a325e599f74ef5678",
+                "55725f4f8e692565a926164e1f9364aa6b2db70b466b0fd49ba09e49c7055ae9"
+            ]
+        }
+    ],
+    "merkle_tree_structure": {
+        "height": 3,
+        "leaf_count": 4,
+        "is_complete_binary_tree": true
+    },
+    "size_statistics": {
+        "total_size_mb": 6.652854919433594,
+        "data_size_mb": 6.652854919433594,
+        "average_block_size_mb": 1.6632137298583984,
+        "min_block_size_mb": 0.6670560836791992,
+        "max_block_size_mb": 2.029595375061035
+    }
+}
