@@ -1,1 +1,226 @@
-*.csv
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Build artifacts
+verification-rs/target/
+verification-rs/Cargo.lock
+
+# STARK proof files
+*.bin
+*.pkl
+proof.bin
+merkle_proof.bin
+simple_stark_proof.json
+test_proof.bin
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*_temp.*
+*_backup.*
+*_bak.*
+
+# Block backup files
+*_backup.csv
+*_clean.csv
+*_temp.csv
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Test coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Documentation builds
+docs/_build/
+
+# Large data files (commented out - uncomment if needed)
+# *.csv
+# *.json
+
+# Specific to this project
+# Uncomment these if you want to ignore the actual data files
+# test_blocks_commitments/*.csv
+# 1_blocks_commitments/*.json
+# merkle_commitment.json
+
+# Performance profiling
+*.prof
+
+# Rust-specific
+**/*.rs.bk
+*.orig
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Temporary editor files
+*.swp
+*.swo
+*.tmp
+
+# Node.js (if any JS tools are used)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated documentation
+doc/
+docs/build/
+
+# Benchmark results
+benchmarks/
+*.bench
+
+# Flamegraph files
+*.svg
+flamegraph.svg
+
+# Perf data
+perf.data*
+
+# Core dumps
+core.*
+
+# Backup files created by editors
+*~
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.save
+*.swp
+*.tmp
+
+# Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
