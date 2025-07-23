@@ -1,0 +1,95 @@
+{
+  "commitment_type": "merkle_tree",
+  "hash_algorithm": "SHA3-256",
+  "root_hash": [
+    [
+      "3f2c30d085d26f9fc59c8bff75baec8f4f9096b62bd3d26b62f505f000ccbd16"
+    ]
+  ],
+  "total_blocks": 4,
+  "data_blocks": 4,
+  "empty_blocks": 0,
+  "blocks_power_of_2": true,
+  "timestamp": "2025-07-23T19:47:32.521062",
+  "upload_id": "f381394f-a68f-4fe3-8a1b-8f9f6d0dba74",
+  "user_id": "web_user",
+  "block_metadata": [
+    {
+      "block_id": "block_0001",
+      "hash": "a473f6ed933cfda8f0834cd7baa19440736a435848f414826010bd698885afa2",
+      "row_count": 15232,
+      "size_bytes": 2117503,
+      "size_mb": 2.0194082260131836,
+      "is_empty": false,
+      "timestamp": "2025-07-23T19:47:32.312970",
+      "upload_id": "f381394f-a68f-4fe3-8a1b-8f9f6d0dba74",
+      "user_id": "web_user",
+      "local_path": "/var/folders/7q/7r7m0shx69l2h696rknt7ly40000gn/T/zk_audit_blocks_ohtb5g9_/block_0001.csv",
+      "authentication_path": [
+        "5e5110b9dc86ce7bff4b37053fb9882767697096c001f0131ca5cf5869a396cd",
+        "e95886e4385c0079121d93615e42b07f96e740b0445d52499437b476ca7ff7fa"
+      ]
+    },
+    {
+      "block_id": "block_0002",
+      "hash": "5e5110b9dc86ce7bff4b37053fb9882767697096c001f0131ca5cf5869a396cd",
+      "row_count": 14999,
+      "size_bytes": 2095544,
+      "size_mb": 1.9984664916992188,
+      "is_empty": false,
+      "timestamp": "2025-07-23T19:47:32.397133",
+      "upload_id": "f381394f-a68f-4fe3-8a1b-8f9f6d0dba74",
+      "user_id": "web_user",
+      "local_path": "/var/folders/7q/7r7m0shx69l2h696rknt7ly40000gn/T/zk_audit_blocks_ohtb5g9_/block_0002.csv",
+      "authentication_path": [
+        "a473f6ed933cfda8f0834cd7baa19440736a435848f414826010bd698885afa2",
+        "e95886e4385c0079121d93615e42b07f96e740b0445d52499437b476ca7ff7fa"
+      ]
+    },
+    {
+      "block_id": "block_0003",
+      "hash": "966f4e9ef6530e1e6f210bcb6281244ea670cf4647d5d6beaa05f6cd4f84f6fb",
+      "row_count": 14982,
+      "size_bytes": 2094295,
+      "size_mb": 1.9972753524780273,
+      "is_empty": false,
+      "timestamp": "2025-07-23T19:47:32.482577",
+      "upload_id": "f381394f-a68f-4fe3-8a1b-8f9f6d0dba74",
+      "user_id": "web_user",
+      "local_path": "/var/folders/7q/7r7m0shx69l2h696rknt7ly40000gn/T/zk_audit_blocks_ohtb5g9_/block_0003.csv",
+      "authentication_path": [
+        "644c4628a07f142a7af405a209ae638ed77fc03476c0719c9d21d2c86abba0d4",
+        "98c1f53c3f6ceab5cd6625c9ab5f157fedb12abb69d102cc857a6f6ad8d33f7c"
+      ]
+    },
+    {
+      "block_id": "block_0004",
+      "hash": "644c4628a07f142a7af405a209ae638ed77fc03476c0719c9d21d2c86abba0d4",
+      "row_count": 4787,
+      "size_bytes": 668682,
+      "size_mb": 0.6377048492431641,
+      "is_empty": false,
+      "timestamp": "2025-07-23T19:47:32.516774",
+      "upload_id": "f381394f-a68f-4fe3-8a1b-8f9f6d0dba74",
+      "user_id": "web_user",
+      "local_path": "/var/folders/7q/7r7m0shx69l2h696rknt7ly40000gn/T/zk_audit_blocks_ohtb5g9_/block_0004.csv",
+      "authentication_path": [
+        "966f4e9ef6530e1e6f210bcb6281244ea670cf4647d5d6beaa05f6cd4f84f6fb",
+        "98c1f53c3f6ceab5cd6625c9ab5f157fedb12abb69d102cc857a6f6ad8d33f7c"
+      ]
+    }
+  ],
+  "merkle_tree_structure": {
+    "height": 3,
+    "leaf_count": 4,
+    "is_complete_binary_tree": true
+  },
+  "size_statistics": {
+    "total_size_mb": 6.652854919433594,
+    "data_size_mb": 6.652854919433594,
+    "average_block_size_mb": 1.6632137298583984,
+    "min_block_size_mb": 0.6377048492431641,
+    "max_block_size_mb": 2.0194082260131836
+  },
+  "cloud_upload_success": true
+}

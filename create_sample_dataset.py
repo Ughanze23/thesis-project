@@ -12,7 +12,7 @@ def create_sample_dataset():
     random.seed(42)
     
     # Generate sample financial transaction data
-    num_records = 50000  # Should create multiple 2MB blocks
+    num_records = 500000  # Should create multiple 2MB blocks
     
     # Generate realistic financial data
     start_date = datetime(2024, 1, 1)

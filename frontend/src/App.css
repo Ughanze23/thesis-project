@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.audit-card {
+  @apply bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300;
+}
+
+.metric-card {
+  @apply bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200;
+}
+
+.proof-verification {
+  @apply bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg;
+}
+
+.proof-verification.failed {
+  @apply bg-red-50 border-red-500;
+}
+
+.loading-spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
+}
+
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2.5;
+}
+
+.progress-bar-fill {
+  @apply h-2.5 bg-blue-600 rounded-full transition-all duration-500 ease-out;
+}
+
+/* ZK proof visualization */
+.stark-proof-container {
+  @apply bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6;
+}
+
+.merkle-tree-visualization {
+  @apply bg-gray-900 text-green-400 font-mono text-sm p-4 rounded-lg overflow-auto;
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pulse-success {
+  animation: pulseSuccess 2s infinite;
+}
+
+@keyframes pulseSuccess {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Status indicators */
+.status-pending {
+  @apply bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-running {
+  @apply bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-success {
+  @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-failed {
+  @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium;
+}
