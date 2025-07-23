@@ -194,7 +194,7 @@ class CloudDataIngestionPipeline:
             # Note: temp_dir cleanup handled by caller
             pass
     
-    def create_merkle_commitment(self, block_metadata: List[Dict]) -> Dict:
+    def create_merkle_commitment(self, block_metadata: List[Dict], target_block_size_mb: float = 2.0) -> Dict:
         """Create Merkle tree commitment from block metadata."""
         print("\n🌳 Building Merkle tree commitment...")
         
@@ -204,7 +204,7 @@ class CloudDataIngestionPipeline:
         # Build Merkle tree
         merkle_tree = CloudMerkleTree(block_hashes)
         
-        # Add authentication paths to metadata
+        # Generate authentication paths for each block
         print("🔐 Generating authentication paths...")
         for i, block in enumerate(block_metadata):
             auth_path = merkle_tree.get_authentication_path(i)
@@ -222,6 +222,7 @@ class CloudDataIngestionPipeline:
             "data_blocks": len(non_empty_blocks),
             "empty_blocks": empty_blocks,
             "blocks_power_of_2": True,
+            "target_block_size_mb": target_block_size_mb,
             "timestamp": datetime.now().isoformat(),
             "upload_id": block_metadata[0]['upload_id'] if block_metadata else "",
             "user_id": self.user_id,
@@ -379,7 +380,7 @@ class CloudDataIngestionPipeline:
             temp_dir = os.path.dirname(block_metadata[0]['local_path']) if block_metadata else None
             
             # Step 2: Create Merkle commitment
-            commitment_data = self.create_merkle_commitment(block_metadata)
+            commitment_data = self.create_merkle_commitment(block_metadata, target_block_size_mb)
             
             if upload_to_cloud:
                 # Step 3: Upload to S3

@@ -43,10 +43,10 @@ This system enables organizations to audit blockchain/financial data with mathem
 ### Prerequisites
 
 - **Rust 1.70+** with nightly toolchain
-- **Python 3.7+** with pip
+- **Python 3.8+** with pip
 - **Node.js 16+** with npm
-- **AWS CLI** configured (for cloud deployment)
-- **Docker** (for Lambda containerization)
+- **AWS CLI** configured (for cloud deployment, optional)
+- **Docker** (for Lambda containerization, optional)
 
 ### 1. Clone and Setup
 
@@ -55,13 +55,51 @@ git clone <repository-url>
 cd thesis
 ```
 
-### 2. Run the Complete Demo
+### 2. Install Dependencies
 
+**Python Backend:**
 ```bash
-python3 demo.py
+pip install -r requirements.txt
 ```
 
-This runs a complete end-to-end demonstration including:
+**Frontend:**
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+**Rust Verification System:**
+```bash
+cd verification-rs
+cargo build --release
+cd ..
+```
+
+### 3. Run the Application
+
+**Option A: Full Web Application (Recommended)**
+
+1. **Start the Backend Server:**
+   ```bash
+   python3 fastapi-server.py
+   ```
+   The API will be available at `http://localhost:8000`
+
+2. **Start the Frontend (in a new terminal):**
+   ```bash
+   cd frontend
+   npm start
+   ```
+   The web interface will open at `http://localhost:3000`
+
+3. **Use the Application:**
+   - Upload CSV files through the web interface
+   - Configure audit parameters (confidence level, corruption rate)
+   - Monitor real-time audit progress
+   - View verification results
+
+This includes:
 - Sample dataset generation
 - Data ingestion and block creation
 - Random block selection with 95% confidence
@@ -69,27 +107,26 @@ This runs a complete end-to-end demonstration including:
 - Tampering detection testing
 - Performance analysis
 
-### 3. Local Development
+### 4. Testing Individual Components
 
-**Test the existing STARK system:**
+**Test STARK verification system:**
 ```bash
 cd verification-rs
 cargo run --bin demo_zk_verification
 ```
 
-**Run tampering detection test:**
+**Test tampering detection:**
 ```bash
 python3 test_tampering.py
 ```
 
-**Start the frontend:**
+**Run Rust tests:**
 ```bash
-cd frontend
-npm install
-npm start
+cd verification-rs
+cargo test
 ```
 
-### 4. Cloud Deployment
+### 5. Cloud Deployment (Optional)
 
 **Deploy AWS infrastructure:**
 ```bash
@@ -101,6 +138,51 @@ cd infrastructure
 ```bash
 cd lambda-functions  
 ./build.sh
+```
+
+## 🔧 Development Setup
+
+### Backend Development
+
+The FastAPI server (`fastapi-server.py`) provides:
+- File upload endpoint (`POST /api/upload`)
+- Audit management (`POST /api/audit/start`, `GET /api/audit/{id}/status`)
+- Real-time status updates
+- Integration with Rust verification system
+
+**Key endpoints:**
+- `http://localhost:8000/docs` - Interactive API documentation
+- `http://localhost:8000/api/health` - Health check
+- `http://localhost:8000/api/uploads` - List uploaded files
+
+### Frontend Development
+
+The React frontend provides:
+- File upload interface
+- Real-time audit monitoring
+- Results visualization
+- Configuration management
+
+**Development commands:**
+```bash
+cd frontend
+npm start          # Development server
+npm run build      # Production build
+npm test           # Run tests
+```
+
+### Rust Verification System
+
+The verification system (`verification-rs/`) handles:
+- Merkle tree verification
+- STARK proof generation/verification
+- Block integrity checking
+
+**Key binaries:**
+```bash
+cargo run --bin verify_upload_blocks    # Verify specific blocks
+cargo run --bin demo_zk_verification    # Demo verification
+cargo run --bin test_stark              # Test STARK system
 ```
 
 ## 📂 Project Structure
@@ -248,25 +330,66 @@ cd frontend && npm test
 
 ## 🚀 Deployment Options
 
-### Option 1: Local Development
+### Option 1: Local Web Application
 ```bash
-python3 demo.py  # Complete local demo
-cd verification-rs && cargo run --bin demo_zk_verification
+# Terminal 1: Start backend
+python3 fastapi-server.py
+
+# Terminal 2: Start frontend  
 cd frontend && npm start
 ```
 
-### Option 2: AWS Cloud Deployment
+### Option 2: Command Line Demo
+```bash
+python3 demo.py  # Complete local demo
+cd verification-rs && cargo run --bin demo_zk_verification
+```
+
+### Option 3: AWS Cloud Deployment
 ```bash
 cd infrastructure && ./deploy.sh  # Full AWS infrastructure
 cd lambda-functions && ./build.sh  # Lambda functions
 cd frontend && npm run build  # Frontend build
 ```
 
-### Option 3: Container Deployment
+### Option 4: Container Deployment
 ```bash
 # Lambda functions use containerized deployment
 docker build -t zk-audit-lambda .
 ```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**1. Missing Python dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**2. Rust compilation errors:**
+```bash
+cd verification-rs
+cargo clean
+cargo build --release
+```
+
+**3. Frontend build issues:**
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**4. Port conflicts:**
+- Backend runs on port 8000
+- Frontend runs on port 3000
+- Make sure these ports are available
+
+**5. File upload issues:**
+- Ensure the backend server is running before starting frontend
+- Check that `fastapi-server.py` shows "Application startup complete"
+- Verify API is accessible at `http://localhost:8000/docs`
 
 ## 📈 Monitoring and Analytics
 
