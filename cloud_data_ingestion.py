@@ -16,6 +16,7 @@ from tqdm import tqdm
 from typing import List, Dict, Tuple, Optional
 import tempfile
 import shutil
+from pathlib import Path
 
 class CloudMerkleTree:
     """Merkle Tree implementation optimized for cloud storage."""
@@ -23,7 +24,7 @@ class CloudMerkleTree:
     def __init__(self, leaves: List[str]):
         self.leaves = leaves
         self.tree = self._build_tree(leaves)
-        self.root = self.tree[0] if self.tree else None
+        self.root = self.tree[0][0] if self.tree and len(self.tree[0]) > 0 else None
         self.leaf_count = len(leaves)
     
     def _build_tree(self, leaves: List[str]) -> List[List[str]]:
@@ -216,7 +217,7 @@ class CloudDataIngestionPipeline:
         commitment_data = {
             "commitment_type": "merkle_tree",
             "hash_algorithm": "SHA3-256",
-            "root_hash": [merkle_tree.root],  # List format for compatibility
+            "root_hash": [merkle_tree.root],  # Array format for Rust compatibility
             "total_blocks": len(block_metadata),
             "data_blocks": len(non_empty_blocks),
             "empty_blocks": empty_blocks,
@@ -393,7 +394,11 @@ class CloudDataIngestionPipeline:
                 commitment_data['cloud_upload_success'] = True  # Local mode
             
             # Step 5: Save local copy
-            output_file = f"commitment_{upload_id}.json"
+            # Create merkle_commitments directory if it doesn't exist
+            commitments_dir = Path("merkle_commitments")
+            commitments_dir.mkdir(exist_ok=True)
+            
+            output_file = commitments_dir / f"commitment_{upload_id}.json"
             with open(output_file, 'w') as f:
                 json.dump(commitment_data, f, indent=2)
             

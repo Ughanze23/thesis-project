@@ -6,7 +6,8 @@ import {
   ClockIcon,
   ChartBarIcon,
   PlayCircleIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { useAudit, AuditData, UploadData } from '../context/AuditContext';
 import { apiService } from '../services/api';
@@ -72,7 +73,7 @@ export function AuditPage() {
       const auditData: AuditData = {
         auditId: response.audit_data.audit_id,
         uploadId: response.audit_data.upload_id,
-        selectedBlocks: response.audit_data.selected_blocks,
+        selectedBlocks: response.audit_data.selected_blocks_display || response.audit_data.selected_blocks.slice(0, 10),
         sampleSize: response.audit_data.sample_size,
         samplePercentage: response.audit_data.sample_percentage,
         confidence: `${response.audit_data.confidence_level}%`,
@@ -95,6 +96,11 @@ export function AuditPage() {
               results: statusData.results,
             };
             actions.updateAudit(auditData.auditId, completedAudit);
+            
+            // Reset loading state when audit completes
+            setIsStartingAudit(false);
+            actions.setLoading(false);
+            
             navigate(`/results/${auditData.auditId}`);
           } else {
             // Continue polling every 2 seconds
@@ -103,6 +109,10 @@ export function AuditPage() {
         } catch (error) {
           console.error('Failed to get audit status:', error);
           actions.setError('Failed to get audit status');
+          
+          // Reset loading state on error
+          setIsStartingAudit(false);
+          actions.setLoading(false);
         }
       };
 
@@ -112,7 +122,8 @@ export function AuditPage() {
     } catch (error) {
       console.error('Failed to start audit:', error);
       actions.setError(`Failed to start audit: ${error}`);
-    } finally {
+      
+      // Reset loading state on start error
       setIsStartingAudit(false);
       actions.setLoading(false);
     }
@@ -252,7 +263,7 @@ export function AuditPage() {
             3. Audit Preview
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="metric-card">
               <div className="flex items-center space-x-3 mb-2">
                 <ChartBarIcon className="h-6 w-6 text-blue-600" />
@@ -278,19 +289,6 @@ export function AuditPage() {
                 detection probability
               </p>
             </div>
-
-            <div className="metric-card">
-              <div className="flex items-center space-x-3 mb-2">
-                <ClockIcon className="h-6 w-6 text-purple-600" />
-                <h3 className="font-semibold text-gray-900">Est. Time</h3>
-              </div>
-              <p className="text-2xl font-bold text-purple-600">
-                {Math.ceil(sampleSize / 10)}
-              </p>
-              <p className="text-sm text-gray-600">
-                minutes
-              </p>
-            </div>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -310,10 +308,10 @@ export function AuditPage() {
             <button
               onClick={startAudit}
               disabled={isStartingAudit}
-              className={`flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors ${
+              className={`flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-all duration-200 transform ${
                 isStartingAudit
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  ? 'bg-gray-400 text-white cursor-not-allowed scale-95'
+                  : 'bg-green-600 text-white hover:bg-green-700 hover:scale-105 shadow-lg hover:shadow-xl'
               }`}
             >
               {isStartingAudit ? (
@@ -341,7 +339,8 @@ export function AuditPage() {
           </h2>
           <div className="space-y-4">
             {state.audits.slice(-3).reverse().map((audit) => (
-              <div key={audit.auditId} className="audit-card">
+              <div key={audit.auditId} className="audit-card cursor-pointer hover:bg-gray-50 transition-colors"
+                   onClick={() => navigate(`/results/${audit.auditId}`)}>
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-gray-900">
@@ -356,13 +355,25 @@ export function AuditPage() {
                       )}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <div className={`status-${audit.status}`}>
-                      {audit.status}
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/results/${audit.auditId}`);
+                      }}
+                      className="flex items-center space-x-1 px-3 py-1 rounded-lg text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                    >
+                      <EyeIcon className="h-4 w-4" />
+                      <span>View</span>
+                    </button>
+                    <div className="text-right">
+                      <div className={`status-${audit.status}`}>
+                        {audit.status}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {new Date(audit.startTime).toLocaleDateString()}
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {new Date(audit.startTime).toLocaleDateString()}
-                    </p>
                   </div>
                 </div>
               </div>

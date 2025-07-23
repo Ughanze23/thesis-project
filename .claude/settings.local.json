@@ -15,7 +15,8 @@
       "Bash(pip3 install:*)",
       "Bash(npm start)",
       "Bash(curl:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }

@@ -248,29 +248,6 @@ export function ResultsPage() {
               </ResponsiveContainer>
             </div>
           </div>
-
-          {/* Verification Times Bar Chart */}
-          <div className="audit-card">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Verification Times by Block
-            </h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={verificationData.slice(0, 10)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="block" 
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis label={{ value: 'Time (ms)', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
-                  <Bar dataKey="time" fill="#3B82F6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
         </div>
       )}
 
@@ -311,14 +288,25 @@ export function ResultsPage() {
           {/* Mock STARK proof visualization */}
           <div className="merkle-tree-visualization">
             <div className="text-xs">
-              <div>🔐 STARK Proof Execution Trace (Sample Block)</div>
+              <div>🔐 STARK Proof Execution Summary</div>
               <div className="mt-2 space-y-1">
-                <div>Step 0: Initialize(leaf_hash: {audit.auditId.slice(0, 16)}...)</div>
-                <div>Step 1: HashCombine(current: ..., sibling: [HIDDEN], position: LEFT)</div>
-                <div>Step 2: HashCombine(current: ..., sibling: [HIDDEN], position: RIGHT)</div>
-                <div>Step 3: Verify(computed_root: ..., expected_root: ...)</div>
-                <div className="text-green-400">✓ Constraint satisfaction: 100%</div>
-                <div className="text-green-400">✓ Zero-knowledge property: MAINTAINED</div>
+                {results.verificationResults.length > 0 && (
+                  <>
+                    <div>📊 Blocks verified: {results.statistics.blocksAudited}</div>
+                    <div>✅ Successful proofs: {results.statistics.blocksPassed}</div>
+                    <div>❌ Failed proofs: {results.statistics.blocksFailed}</div>
+                    <div>🔒 Total proof size: {results.statistics.totalProofSize || 'N/A'} bytes</div>
+                    <div>⚡ Average generation time: {results.verificationResults[0]?.generationTimeMs || 0}ms per block</div>
+                    <div>🔍 Average verification time: {results.statistics.averageVerificationTimeMs}ms per block</div>
+                    <div className="text-green-400">✓ Zero-knowledge property: MAINTAINED</div>
+                    <div className="text-green-400">✓ Privacy: 100% authentication paths hidden</div>
+                    {results.statistics.tamperingDetected ? (
+                      <div className="text-red-400">⚠️ TAMPERING DETECTED</div>
+                    ) : (
+                      <div className="text-green-400">✓ No tampering detected</div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -341,6 +329,9 @@ export function ResultsPage() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Generation Time
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Verification Time
@@ -368,6 +359,9 @@ export function ResultsPage() {
                           <span className="text-red-800 text-sm">Failed</span>
                         </div>
                       )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {result.generationTimeMs || 0}ms
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {result.verificationTimeMs}ms

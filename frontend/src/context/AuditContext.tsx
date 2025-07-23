@@ -39,6 +39,7 @@ export interface AuditResults {
   tamperingDetected: boolean;
   verificationResults: BlockVerificationResult[];
   statistics: AuditStatistics;
+  rawStarkOutput?: string;
 }
 
 export interface BlockVerificationResult {
@@ -47,6 +48,8 @@ export interface BlockVerificationResult {
   verificationPassed: boolean;
   verificationTimeMs: number;
   starkProofSize: number;
+  generationTimeMs?: number;
+  traditionalPassed?: boolean;
   errorMessage?: string;
 }
 
@@ -57,6 +60,8 @@ export interface AuditStatistics {
   blocksFailed: number;
   totalTimeMs: number;
   averageVerificationTimeMs: number;
+  totalProofSize?: number;
+  averageProofSize?: number;
   confidenceLevel: string;
   tamperingDetected: boolean;
 }

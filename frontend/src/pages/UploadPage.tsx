@@ -1,21 +1,26 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   DocumentArrowUpIcon, 
   CheckCircleIcon, 
   ExclamationCircleIcon,
   ClockIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  PlayCircleIcon,
+  ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { useAudit, UploadData } from '../context/AuditContext';
 import { apiService } from '../services/api';
 
 export function UploadPage() {
   const { state, actions } = useAudit();
+  const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState('');
+  const [recentUpload, setRecentUpload] = useState<UploadData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -51,9 +56,8 @@ export function UploadPage() {
       return;
     }
     
-    // Validate file size (max 100MB)
-    if (selectedFile.size > 100 * 1024 * 1024) {
-      actions.setError('File size must be less than 100MB');
+    if (selectedFile.size > 1000 * 1024 * 1024) {
+      actions.setError('File size must be less than 1000MB');
       return;
     }
 
@@ -107,18 +111,20 @@ export function UploadPage() {
       };
 
       actions.addUpload(uploadData);
+      setRecentUpload(uploadData);
       setUploadStatus('success');
       
-      // Reset after 3 seconds
+      // Reset after 5 seconds (extended to give time for audit button)
       setTimeout(() => {
         setUploadStatus('idle');
         setFile(null);
         setUploadProgress(0);
         setProcessingStage('');
+        setRecentUpload(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-      }, 3000);
+      }, 5000);
 
     } catch (error) {
       console.error('Upload failed:', error);
@@ -185,7 +191,7 @@ export function UploadPage() {
               <p className="text-gray-600 mb-4">
                 {file 
                   ? `File size: ${formatFileSize(file.size)}`
-                  : 'Maximum file size: 100MB'
+                  : ''
                 }
               </p>
               <div className="space-x-4">
@@ -231,9 +237,28 @@ export function UploadPage() {
               <h3 className="text-lg font-semibold text-green-900">
                 Upload Successful!
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-4">
                 Your dataset has been processed and is ready for auditing.
               </p>
+              {recentUpload && (
+                <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4">
+                  <button
+                    onClick={() => navigate('/audit')}
+                    className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                  >
+                    <PlayCircleIcon className="h-5 w-5" />
+                    <span>Start Audit</span>
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </button>
+                  <span className="text-gray-500 text-sm">or</span>
+                  <button
+                    onClick={() => navigate('/upload')}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
+                  >
+                    Upload Another File
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -287,7 +312,7 @@ export function UploadPage() {
             <h3 className="font-semibold text-gray-900">Processing Time</h3>
           </div>
           <p className="text-sm text-gray-600">
-            Typical processing: 1-2 minutes for files up to 50MB.
+            Typical processing: less than 1 minute for files up to 50MB.
             Merkle tree generation is the longest step.
           </p>
         </div>

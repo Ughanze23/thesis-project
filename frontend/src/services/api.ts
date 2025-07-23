@@ -44,6 +44,7 @@ export interface AuditStartResponse {
     upload_id: string;
     user_id: string;
     selected_blocks: number[];
+    selected_blocks_display?: number[];
     sample_size: number;
     sample_percentage: string;
     confidence_level: number;
