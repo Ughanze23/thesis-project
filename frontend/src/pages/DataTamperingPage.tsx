@@ -114,43 +114,11 @@ export function DataTamperingPage() {
     loadBlockData();
   };
 
-  const handleTestTampering = async () => {
+  const handleTestTampering = () => {
     if (!selectedUpload) return;
     
-    setIsStartingAudit(true);
-    setError(null);
-    try {
-      // Start a new audit to test tampering detection
-      const auditRequest = {
-        upload_id: selectedUpload,
-        confidence_level: 95,
-        min_corruption_rate: 5
-      };
-      
-      const response = await apiService.startAudit(auditRequest);
-      
-      // Add the new audit to the context
-      const newAudit = {
-        auditId: response.audit_data.audit_id,
-        uploadId: response.audit_data.upload_id,
-        selectedBlocks: response.audit_data.selected_blocks_display || response.audit_data.selected_blocks || [],
-        sampleSize: response.audit_data.sample_size,
-        samplePercentage: response.audit_data.sample_percentage,
-        confidence: `${response.audit_data.confidence_level}%`,
-        status: 'running' as const,
-        startTime: response.audit_data.start_time
-      };
-      
-      actions.addAudit(newAudit);
-      actions.setCurrentAudit(newAudit);
-      
-      // Redirect to audit page instead of polling here
-      navigate('/audit');
-      
-    } catch (err: any) {
-      setError(`Failed to start tampering test: ${err.message}`);
-      setIsStartingAudit(false);
-    }
+    // Navigate to audit page for manual testing
+    navigate('/audit');
   };
 
 
@@ -196,7 +164,8 @@ export function DataTamperingPage() {
             <div className="text-sm text-blue-800 space-y-1">
               <p><strong>1.</strong> Select a data block below and edit its contents</p>
               <p><strong>2.</strong> Save your changes to tamper with the stored data</p>
-              <p><strong>3.</strong> Run "Test Tampering Detection" to see if the system catches your modifications</p>
+              <p><strong>3.</strong> Click "Go to Audit Page" to manually run an audit on the tampered data</p>
+              <p><strong>4.</strong> The audit will detect tampering and show you exactly which blocks were modified</p>
               <p><strong>💡</strong> The audit compares current blocks against the original Merkle commitment</p>
             </div>
           </div>
@@ -294,10 +263,9 @@ export function DataTamperingPage() {
                     </button>
                     <button
                       onClick={handleTestTampering}
-                      disabled={isStartingAudit}
-                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
-                      {isStartingAudit ? 'Starting Audit...' : 'Test Tampering Detection'}
+                      Go to Audit Page
                     </button>
                   </>
                 ) : (
@@ -327,7 +295,7 @@ export function DataTamperingPage() {
                 )}
                 {!isEditMode && selectedUpload && (
                   <div className="text-sm text-gray-600">
-                    💡 Make changes, save them, then test tampering detection
+                    💡 Make changes, save them, then go to audit page to test tampering detection
                   </div>
                 )}
               </div>
