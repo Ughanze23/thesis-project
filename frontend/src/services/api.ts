@@ -136,6 +136,43 @@ export const apiService = {
       throw error;
     }
   },
+
+  // Get blocks for an upload
+  async getUploadBlocks(uploadId: string) {
+    try {
+      const response = await api.get(`/uploads/${uploadId}/blocks`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get upload blocks:', error);
+      throw error;
+    }
+  },
+
+  // Get data for a specific block
+  async getBlockData(uploadId: string, blockId: string) {
+    try {
+      const response = await api.get(`/uploads/${uploadId}/blocks/${blockId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get block data:', error);
+      throw error;
+    }
+  },
+
+  // Update data for a specific block
+  async updateBlockData(uploadId: string, blockId: string, data: any[]) {
+    try {
+      const response = await api.post(`/uploads/${uploadId}/blocks/${blockId}`, {
+        upload_id: uploadId,
+        block_id: blockId,
+        data: data
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update block data:', error);
+      throw error;
+    }
+  },
 };
 
 export default apiService;

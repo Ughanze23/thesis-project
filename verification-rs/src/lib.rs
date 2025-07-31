@@ -62,6 +62,13 @@ pub fn compute_sha3_hash_str(data: &str) -> String {
     compute_sha3_hash(data.as_bytes())
 }
 
+/// Calculate the SHA3-256 hash of a block file
+pub fn compute_block_file_hash(file_path: &str) -> Result<String> {
+    let data = fs::read(file_path)
+        .with_context(|| format!("Failed to read block file: {}", file_path))?;
+    Ok(compute_sha3_hash(&data))
+}
+
 pub fn verify_merkle_path(
     leaf_hash: &str,
     leaf_index: usize,

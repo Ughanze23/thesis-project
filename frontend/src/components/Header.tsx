@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShieldCheckIcon, CpuChipIcon, ChartBarIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, CpuChipIcon, ChartBarIcon, DocumentArrowUpIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 
 export function Header() {
   const location = useLocation();
@@ -60,6 +60,18 @@ export function Header() {
             >
               <CpuChipIcon className="h-4 w-4" />
               <span>Start Audit</span>
+            </Link>
+
+            <Link
+              to="/tamper"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/tamper') 
+                  ? 'text-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              <PencilSquareIcon className="h-4 w-4" />
+              <span>Tamper Data</span>
             </Link>
           </nav>
 

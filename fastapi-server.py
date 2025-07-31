@@ -71,6 +71,11 @@ class AuditStartResponse(BaseModel):
     audit_data: dict
     error: Optional[str] = None
 
+class BlockDataRequest(BaseModel):
+    upload_id: str
+    block_id: str
+    data: List[Dict]
+
 # Middleware for request logging (only API calls)
 @app.middleware("http") 
 async def log_requests(request: Request, call_next):
@@ -110,6 +115,11 @@ async def upload_dataset(file: UploadFile = File(...)):
         upload_id = str(uuid.uuid4())
         logger.info(f"🆔 Generated upload_id: {upload_id}")
         
+        # Create blocks directory for this upload
+        project_root = Path(__file__).parent
+        blocks_dir = project_root / "upload_blocks" / upload_id
+        blocks_dir.mkdir(parents=True, exist_ok=True)
+        
         # Save uploaded file temporarily
         temp_dir = tempfile.mkdtemp()
         file_path = os.path.join(temp_dir, file.filename)
@@ -138,24 +148,27 @@ async def upload_dataset(file: UploadFile = File(...)):
                 file_path,
                 '--local-only',
                 '--user-id', 'web_user',
-                '--block-size', '2.0'
+                '--upload-id', upload_id,
+                '--block-size', '2.0',
+                '--blocks-dir', str(blocks_dir)
             ], capture_output=True, text=True, cwd=project_root, timeout=60)
+            
+            # Initialize variables for both success and failure cases
+            total_blocks = max(4, int(file_size_mb / 2))
+            root_hash = f"hash_{upload_id[:16]}..."
+            commitment_file_generated = None
             
             if result.returncode != 0:
                 logger.error(f"❌ PROCESSING: Data ingestion failed with return code {result.returncode}")
                 logger.error(f"❌ PROCESSING: stderr: {result.stderr}")
                 logger.error(f"❌ PROCESSING: stdout: {result.stdout}")
-                total_blocks = max(4, int(file_size_mb / 2))
-                root_hash = f"hash_{upload_id[:16]}..."
+                # Will create fallback blocks below
             else:
                 logger.info(f"✅ PROCESSING: Data ingestion completed successfully")
                 logger.info(f"📋 PROCESSING: Full output:\n{result.stdout}")
                 
                 # Parse processing output
                 output_lines = result.stdout.split('\n')
-                total_blocks = 8
-                root_hash = f"hash_{upload_id[:16]}..."
-                commitment_file_generated = None
                 
                 for line in output_lines:
                     if 'Total blocks:' in line:
@@ -189,10 +202,36 @@ async def upload_dataset(file: UploadFile = File(...)):
             logger.warning("⏰ PROCESSING: Data ingestion timed out after 60s, using defaults")
             total_blocks = max(4, int(file_size_mb / 2))
             root_hash = f"hash_{upload_id[:16]}..."
+            commitment_file_generated = None
         except Exception as e:
             logger.warning(f"⚠️ PROCESSING: Data ingestion error: {e}, using defaults")
             total_blocks = max(4, int(file_size_mb / 2))
             root_hash = f"hash_{upload_id[:16]}..."
+            commitment_file_generated = None
+        
+        # Ensure blocks directory exists and create fallback blocks if needed
+        if not blocks_dir.exists() or len(list(blocks_dir.glob("block_*.csv"))) == 0:
+            logger.info(f"🔧 FALLBACK: Creating fallback blocks for tampering functionality")
+            try:
+                import pandas as pd
+                
+                # Read the uploaded file
+                df = pd.read_csv(file_path)
+                rows_per_block = max(1, len(df) // total_blocks)
+                
+                # Create simple blocks by splitting the data
+                for i in range(total_blocks):
+                    start_row = i * rows_per_block
+                    end_row = min((i + 1) * rows_per_block, len(df)) if i < total_blocks - 1 else len(df)
+                    
+                    block_data = df.iloc[start_row:end_row] if start_row < len(df) else pd.DataFrame(columns=df.columns)
+                    block_file = blocks_dir / f"block_{i+1:04d}.csv"
+                    block_data.to_csv(block_file, index=False)
+                
+                logger.info(f"✅ FALLBACK: Created {total_blocks} fallback blocks in {blocks_dir}")
+                
+            except Exception as fallback_error:
+                logger.error(f"❌ FALLBACK: Failed to create fallback blocks: {fallback_error}")
         
         # Create upload record
         upload_data = {
@@ -205,7 +244,8 @@ async def upload_dataset(file: UploadFile = File(...)):
             'root_hash': root_hash,
             'timestamp': datetime.now().isoformat(),
             'status': 'completed',
-            'commitment_file': commitment_file_generated if commitment_file_generated else f"commitment_{upload_id}.json"
+            'commitment_file': commitment_file_generated if commitment_file_generated else f"commitment_{upload_id}.json",
+            'blocks_dir': str(blocks_dir)
         }
         
         uploads[upload_id] = upload_data
@@ -361,7 +401,9 @@ async def get_audit_status(audit_id: str):
     start_time = datetime.fromisoformat(audit_info['start_time'])
     elapsed = (datetime.now() - start_time).total_seconds()
     
-    if elapsed > 10 and audit_info['status'] == 'running':
+    logger.info(f"📊 STATUS TIMING: Elapsed {elapsed:.1f}s, Status: {audit_info['status']}")
+    
+    if elapsed > 3 and audit_info['status'] == 'running':
         logger.info(f"🏁 VERIFICATION: Starting audit completion for {audit_id}")
         logger.info(f"🏁 VERIFICATION: Audit has been running for {elapsed:.1f} seconds")
         
@@ -419,12 +461,16 @@ async def get_audit_status(audit_id: str):
                     verification_time = (end_time - start_time).total_seconds()
                     stark_success = result.returncode == 0
                     stark_output = result.stdout
+                    tampering_detected = result.returncode == 1 and "TAMPERING DETECTED" in result.stdout
                     
                     logger.info(f"🔒 REAL STARK VERIFICATION: Process completed in {verification_time:.2f}s")
                     logger.info(f"🔒 REAL STARK VERIFICATION: Return code: {result.returncode}")
-                    logger.info(f"🔒 REAL STARK VERIFICATION: Status: {'✅ SUCCESS' if stark_success else '❌ FAILED'}")
                     
-                    if stark_success:
+                    if tampering_detected:
+                        logger.info(f"🔒 REAL STARK VERIFICATION: Status: 🚨 TAMPERING DETECTED")
+                        logger.info(f"🔒 REAL STARK VERIFICATION: Full output:\n{result.stdout}")
+                    elif stark_success:
+                        logger.info(f"🔒 REAL STARK VERIFICATION: Status: ✅ SUCCESS")
                         logger.info(f"🔒 REAL STARK VERIFICATION: Full output:\n{result.stdout}")
                         
                         # Parse verification results
@@ -478,7 +524,92 @@ async def get_audit_status(audit_id: str):
         total_gen_time = 0
         total_verify_time = 0
         
-        if stark_success and stark_output:
+        if tampering_detected:
+            # Parse tampering details from output
+            output_lines = stark_output.split('\n')
+            blocks_failed = 0
+            blocks_passed = 0
+            verification_results = []
+            
+            # Parse block-by-block results for tampering
+            current_block_index = None
+            current_block_id = None
+            
+            for line in output_lines:
+                line = line.strip()
+                
+                # Parse block verification start
+                if line.startswith('🔍 VERIFYING BLOCK'):
+                    try:
+                        # Extract block index and ID: "🔍 VERIFYING BLOCK 0: block_0001"
+                        parts = line.split(':')
+                        if len(parts) >= 2:
+                            block_part = parts[0]  # "🔍 VERIFYING BLOCK 0"
+                            block_id = parts[1].strip()  # "block_0001"
+                            
+                            # Extract block index
+                            index_part = block_part.split('BLOCK')[1].strip()
+                            current_block_index = int(index_part)
+                            current_block_id = block_id
+                    except:
+                        pass
+                
+                elif "TAMPERING DETECTED! Block" in line and current_block_index is not None:
+                    blocks_failed += 1
+                    verification_results.append({
+                        'blockId': current_block_id or f"block_{current_block_index:04d}",
+                        'blockIndex': current_block_index,
+                        'verificationPassed': False,
+                        'verificationTimeMs': 0,
+                        'starkProofSize': 0,
+                        'generationTimeMs': 0,
+                        'tamperingDetected': True
+                    })
+                    current_block_index = None
+                    current_block_id = None
+                    
+                elif "✅ Zero-knowledge verification: PASSED" in line and current_block_index is not None:
+                    blocks_passed += 1
+                    verification_results.append({
+                        'blockId': current_block_id or f"block_{current_block_index:04d}",
+                        'blockIndex': current_block_index,
+                        'verificationPassed': True,
+                        'verificationTimeMs': 50,  # Approximate
+                        'starkProofSize': 2409,  # Approximate
+                        'generationTimeMs': 100,  # Approximate
+                        'tamperingDetected': False
+                    })
+                    current_block_index = None
+                    current_block_id = None
+            
+            total_blocks_audited = blocks_failed + blocks_passed
+            
+            # Handle tampering detection
+            audit_info.update({
+                'status': 'failed',
+                'end_time': datetime.now().isoformat(),
+                'results': {
+                    'overallSuccess': False,
+                    'tamperingDetected': True,
+                    'verificationResults': verification_results,
+                    'rawStarkOutput': stark_output,
+                    'statistics': {
+                        'totalBlocks': len(audit_info['selected_blocks']),
+                        'blocksAudited': total_blocks_audited,
+                        'blocksPassed': blocks_passed,
+                        'blocksFailed': blocks_failed,
+                        'totalTimeMs': int(verification_time * 1000),
+                        'averageVerificationTimeMs': int(verification_time * 1000 / max(1, total_blocks_audited)),
+                        'totalProofSize': blocks_passed * 2409,  # Approximate proof size
+                        'averageProofSize': 2409,
+                        'confidenceLevel': f"{audit_info['confidence_level']}%",
+                        'tamperingDetected': True
+                    }
+                }
+            })
+            audits[audit_id] = audit_info
+            return {'audit_data': audit_info}
+        elif stark_success and stark_output:
             # Parse the actual verification output
             output_lines = stark_output.split('\n')
             current_block = {}
@@ -613,6 +744,137 @@ async def get_audit_status(audit_id: str):
 async def get_audits():
     """Get all audits."""
     return {"audits": list(audits.values())}
+
+@app.get("/api/uploads/{upload_id}/blocks")
+async def get_upload_blocks(upload_id: str):
+    """Get list of blocks for an upload."""
+    logger.info(f"📁 Fetching blocks for upload: {upload_id}")
+    
+    if upload_id not in uploads:
+        logger.error(f"❌ Upload not found: {upload_id}")
+        raise HTTPException(status_code=404, detail="Upload not found")
+    
+    upload_info = uploads[upload_id]
+    blocks_dir = Path(upload_info['blocks_dir'])
+    
+    if not blocks_dir.exists():
+        logger.error(f"❌ Blocks directory not found: {blocks_dir}")
+        raise HTTPException(status_code=404, detail="Blocks directory not found")
+    
+    try:
+        # Find all CSV block files
+        block_files = list(blocks_dir.glob("block_*.csv"))
+        block_files.sort()
+        
+        blocks_info = []
+        for block_file in block_files:
+            block_id = block_file.stem  # e.g., "block_0001"
+            block_info = {
+                'block_id': block_id,
+                'file_path': str(block_file),
+                'size_bytes': block_file.stat().st_size,
+                'modified': datetime.fromtimestamp(block_file.stat().st_mtime).isoformat()
+            }
+            blocks_info.append(block_info)
+        
+        logger.info(f"✅ Found {len(blocks_info)} blocks for upload {upload_id}")
+        return {
+            'upload_id': upload_id,
+            'blocks': blocks_info,
+            'total_blocks': len(blocks_info)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error reading blocks: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error reading blocks: {str(e)}")
+
+@app.get("/api/uploads/{upload_id}/blocks/{block_id}")
+async def get_block_data(upload_id: str, block_id: str):
+    """Get data for a specific block."""
+    logger.info(f"📄 Fetching data for block: {block_id} in upload: {upload_id}")
+    
+    if upload_id not in uploads:
+        logger.error(f"❌ Upload not found: {upload_id}")
+        raise HTTPException(status_code=404, detail="Upload not found")
+    
+    upload_info = uploads[upload_id]
+    blocks_dir = Path(upload_info['blocks_dir'])
+    block_file = blocks_dir / f"{block_id}.csv"
+    
+    if not block_file.exists():
+        logger.error(f"❌ Block file not found: {block_file}")
+        raise HTTPException(status_code=404, detail="Block file not found")
+    
+    try:
+        import pandas as pd
+        df = pd.read_csv(block_file)
+        
+        # Clean DataFrame to handle NaN values for JSON serialization
+        df_clean = df.fillna('')  # Replace NaN with empty string
+        
+        # Convert to list of dictionaries for JSON response
+        block_data = {
+            'upload_id': upload_id,
+            'block_id': block_id,
+            'columns': df.columns.tolist(),
+            'data': df_clean.to_dict('records'),
+            'row_count': len(df),
+            'file_path': str(block_file)
+        }
+        
+        logger.info(f"✅ Block {block_id} loaded: {len(df)} rows, {len(df.columns)} columns")
+        return block_data
+        
+    except Exception as e:
+        logger.error(f"❌ Error reading block data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error reading block data: {str(e)}")
+
+@app.post("/api/uploads/{upload_id}/blocks/{block_id}")
+async def update_block_data(upload_id: str, block_id: str, request: BlockDataRequest):
+    """Update data for a specific block."""
+    logger.info(f"✏️ Updating data for block: {block_id} in upload: {upload_id}")
+    
+    if upload_id not in uploads:
+        logger.error(f"❌ Upload not found: {upload_id}")
+        raise HTTPException(status_code=404, detail="Upload not found")
+    
+    upload_info = uploads[upload_id]
+    blocks_dir = Path(upload_info['blocks_dir'])
+    block_file = blocks_dir / f"{block_id}.csv"
+    
+    if not block_file.exists():
+        logger.error(f"❌ Block file not found: {block_file}")
+        raise HTTPException(status_code=404, detail="Block file not found")
+    
+    try:
+        import pandas as pd
+        
+        # Convert the new data to DataFrame
+        df = pd.DataFrame(request.data)
+        
+        # Create backup of original file
+        backup_file = blocks_dir / f"{block_id}_backup.csv"
+        if block_file.exists():
+            import shutil
+            shutil.copy2(block_file, backup_file)
+            logger.info(f"💾 Backup created: {backup_file}")
+        
+        # Save the updated data
+        df.to_csv(block_file, index=False)
+        
+        logger.info(f"✅ Block {block_id} updated: {len(df)} rows, {len(df.columns)} columns")
+        return {
+            'success': True,
+            'upload_id': upload_id,
+            'block_id': block_id,
+            'rows_updated': len(df),
+            'backup_created': str(backup_file),
+            'message': f'Block {block_id} updated successfully'
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error updating block data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating block data: {str(e)}")
 
 if __name__ == "__main__":
     print("🚀 Starting ZK Audit FastAPI Server")

@@ -5,6 +5,7 @@ import { HomePage } from './pages/HomePage';
 import { UploadPage } from './pages/UploadPage';
 import { AuditPage } from './pages/AuditPage';
 import { ResultsPage } from './pages/ResultsPage';
+import { DataTamperingPage } from './pages/DataTamperingPage';
 import { AuditProvider } from './context/AuditContext';
 import './App.css';
 
@@ -19,6 +20,7 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/audit" element={<AuditPage />} />
+              <Route path="/tamper" element={<DataTamperingPage />} />
               <Route path="/results/:auditId" element={<ResultsPage />} />
             </Routes>
           </main>

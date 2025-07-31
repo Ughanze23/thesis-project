@@ -16,7 +16,8 @@
       "Bash(npm start)",
       "Bash(curl:*)",
       "Bash(pkill:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

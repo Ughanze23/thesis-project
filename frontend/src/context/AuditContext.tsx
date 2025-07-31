@@ -51,6 +51,7 @@ export interface BlockVerificationResult {
   generationTimeMs?: number;
   traditionalPassed?: boolean;
   errorMessage?: string;
+  tamperingDetected?: boolean;
 }
 
 export interface AuditStatistics {

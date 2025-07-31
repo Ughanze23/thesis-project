@@ -15,7 +15,8 @@ proof.bin
 merkle_proof.bin
 simple_stark_proof.json
 test_proof.bin
-
+/upload_blocks
+/merkle_commitments
 # Python
 __pycache__/
 *.py[cod]

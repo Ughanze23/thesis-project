@@ -1,6 +1,6 @@
 use anyhow::Result;
 use merkle_verification::{
-    load_commitment, get_root_hash, verify_merkle_path,
+    load_commitment, get_root_hash, verify_merkle_path, compute_block_file_hash,
     stark::{generate_stark_proof, verify_stark_proof}
 };
 use std::env;
@@ -55,6 +55,7 @@ fn main() -> Result<()> {
     let mut total_proof_size = 0;
     let mut total_generation_time = 0;
     let mut total_verification_time = 0;
+    let mut tampering_detected = false;
     
     // Verify each selected block
     for &block_index in &selected_blocks {
@@ -65,11 +66,33 @@ fn main() -> Result<()> {
         
         let block = &blocks[block_index];
         println!("\n🔍 VERIFYING BLOCK {}: {}", block_index, block.block_id);
-        println!("   Block hash: {}", block.hash);
+        
+        // Calculate the current hash of the block file
+        let block_file_path = format!("../upload_blocks/{}/{}.csv", upload_id, block.block_id);
+        let current_hash = match compute_block_file_hash(&block_file_path) {
+            Ok(hash) => hash,
+            Err(e) => {
+                println!("❌ Failed to read block file {}: {}", block_file_path, e);
+                continue;
+            }
+        };
+        
+        println!("   Original hash: {}", block.hash);
+        println!("   Current hash:  {}", current_hash);
         println!("   Block size: {:.2} MB", block.size_mb);
         println!("   Auth path length: {}", block.authentication_path.len());
         
-        // Traditional verification first
+        // Check for tampering
+        if current_hash != block.hash {
+            println!("🚨 TAMPERING DETECTED! Block {} has been modified!", block_index);
+            println!("   Expected: {}", block.hash);
+            println!("   Found:    {}", current_hash);
+            tampering_detected = true;
+            verification_results.push((block_index, false, 0, 0, 0));
+            continue;
+        }
+        
+        // Traditional verification first (should use original hash for Merkle path)
         let traditional_start = Instant::now();
         let traditional_result = verify_merkle_path(
             &block.hash,
@@ -160,7 +183,12 @@ fn main() -> Result<()> {
     }
     
     // Final status
-    if successful_verifications == total_verifications && total_verifications > 0 {
+    if tampering_detected {
+        println!("\n🚨 TAMPERING DETECTED!");
+        println!("❌ One or more blocks have been modified since commitment");
+        println!("🛡️  Zero-knowledge audit system successfully detected data tampering");
+        std::process::exit(1);
+    } else if successful_verifications == total_verifications && total_verifications > 0 {
         println!("\n🎉 ALL VERIFICATIONS PASSED!");
         println!("🔒 Zero-knowledge proofs successfully generated and verified");
         println!("🛡️  Data integrity confirmed with complete privacy");

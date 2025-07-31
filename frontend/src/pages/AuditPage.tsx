@@ -89,11 +89,14 @@ export function AuditPage() {
         try {
           const statusData = await apiService.getAuditStatus(auditData.auditId);
           
-          if (statusData.status === 'success' || statusData.status === 'failed') {
+          // statusData is already the audit_data object from the API service
+          const auditInfo = statusData;
+          
+          if (auditInfo.status === 'success' || auditInfo.status === 'failed') {
             const completedAudit: Partial<AuditData> = {
-              status: statusData.status,
-              endTime: statusData.end_time,
-              results: statusData.results,
+              status: auditInfo.status,
+              endTime: auditInfo.end_time,
+              results: auditInfo.results,
             };
             actions.updateAudit(auditData.auditId, completedAudit);
             

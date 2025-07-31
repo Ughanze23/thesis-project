@@ -279,7 +279,7 @@ export function ResultsPage() {
             <div className="bg-white bg-opacity-50 rounded-lg p-4">
               <h4 className="font-semibold text-purple-900 mb-2">Proof Efficiency</h4>
               <p className="text-sm text-purple-700">
-                Average proof size: {Math.round(verificationData.reduce((sum, v) => sum + v.proofSize, 0) / verificationData.length)} bytes.
+                Average proof size: {verificationData.length > 0 ? Math.round(verificationData.reduce((sum, v) => sum + v.proofSize, 0) / verificationData.length) : results?.statistics?.averageProofSize || 0} bytes.
                 Constant size regardless of Merkle tree height.
               </p>
             </div>
@@ -356,7 +356,7 @@ export function ResultsPage() {
                       ) : (
                         <div className="flex items-center space-x-2">
                           <XCircleIcon className="h-4 w-4 text-red-600" />
-                          <span className="text-red-800 text-sm">Failed</span>
+                          <span className="text-red-800 text-sm">{result.tamperingDetected ? 'TAMPERED' : 'Failed'}</span>
                         </div>
                       )}
                     </td>

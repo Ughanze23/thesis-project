@@ -10,13 +10,20 @@ import hashlib
 import json
 import math
 import uuid
-import boto3
 from datetime import datetime
 from tqdm import tqdm
 from typing import List, Dict, Tuple, Optional
 import tempfile
 import shutil
 from pathlib import Path
+
+# Optional boto3 import for cloud functionality
+try:
+    import boto3
+    BOTO3_AVAILABLE = True
+except ImportError:
+    BOTO3_AVAILABLE = False
+    print("⚠️  Warning: boto3 not installed. Cloud features will be disabled.")
 
 class CloudMerkleTree:
     """Merkle Tree implementation optimized for cloud storage."""
@@ -93,9 +100,12 @@ class CloudDataIngestionPipeline:
         
         # Initialize AWS clients
         try:
-            self.s3_client = boto3.client('s3', region_name=aws_region)
-            self.dynamodb = boto3.resource('dynamodb', region_name=aws_region)
-            self.table = self.dynamodb.Table(self.dynamodb_table)
+            if BOTO3_AVAILABLE:
+                self.s3_client = boto3.client('s3', region_name=aws_region)
+                self.dynamodb = boto3.resource('dynamodb', region_name=aws_region)
+                self.table = self.dynamodb.Table(self.dynamodb_table)
+            else:
+                raise ImportError("boto3 not available")
         except Exception as e:
             print(f"⚠️  Warning: AWS clients not initialized: {e}")
             print("📝 Running in local mode only")
@@ -111,7 +121,9 @@ class CloudDataIngestionPipeline:
     
     def split_into_blocks(self, 
                          input_file: str, 
-                         target_block_size_mb: float = 2.0) -> Tuple[List[Dict], int, str]:
+                         target_block_size_mb: float = 2.0,
+                         blocks_dir: Optional[str] = None,
+                         upload_id: Optional[str] = None) -> Tuple[List[Dict], int, str]:
         """Split CSV file into blocks and prepare for cloud upload."""
         print(f"📁 Processing file: {input_file}")
         
@@ -129,9 +141,13 @@ class CloudDataIngestionPipeline:
         print(f"🔢 Rounded to power of 2: {power_of_2_blocks}")
         print(f"📦 Target block size: {target_block_size_mb} MB")
         
-        # Create temporary directory for block processing
-        temp_dir = tempfile.mkdtemp(prefix='zk_audit_blocks_')
-        upload_id = str(uuid.uuid4())
+        # Create directory for block processing
+        if blocks_dir:
+            temp_dir = blocks_dir
+            os.makedirs(temp_dir, exist_ok=True)
+        else:
+            temp_dir = tempfile.mkdtemp(prefix='zk_audit_blocks_')
+        upload_id = upload_id or str(uuid.uuid4())
         
         try:
             # Read and process CSV data
@@ -366,7 +382,9 @@ class CloudDataIngestionPipeline:
     def process_file(self, 
                     input_file: str, 
                     target_block_size_mb: float = 2.0,
-                    upload_to_cloud: bool = True) -> Dict:
+                    upload_to_cloud: bool = True,
+                    blocks_dir: Optional[str] = None,
+                    upload_id: Optional[str] = None) -> Dict:
         """Complete pipeline to process a file for ZK audit system."""
         print(f"🚀 Starting cloud data ingestion pipeline")
         print(f"👤 User ID: {self.user_id}")
@@ -375,7 +393,7 @@ class CloudDataIngestionPipeline:
         try:
             # Step 1: Split into blocks
             block_metadata, total_blocks, upload_id = self.split_into_blocks(
-                input_file, target_block_size_mb
+                input_file, target_block_size_mb, blocks_dir, upload_id
             )
             temp_dir = os.path.dirname(block_metadata[0]['local_path']) if block_metadata else None
             
@@ -417,8 +435,8 @@ class CloudDataIngestionPipeline:
             return commitment_data
             
         finally:
-            # Cleanup temporary files
-            if temp_dir and os.path.exists(temp_dir):
+            # Cleanup temporary files (only if we created a temp directory, not user-specified)
+            if temp_dir and os.path.exists(temp_dir) and not blocks_dir:
                 shutil.rmtree(temp_dir, ignore_errors=True)
 
 def main():
@@ -430,8 +448,10 @@ def main():
     parser.add_argument('--block-size', type=float, default=2.0, 
                        help='Target block size in MB (default: 2.0)')
     parser.add_argument('--user-id', help='User ID (default: random UUID)')
+    parser.add_argument('--upload-id', help='Upload ID (default: random UUID)')
     parser.add_argument('--local-only', action='store_true', 
                        help='Skip cloud upload (local processing only)')
+    parser.add_argument('--blocks-dir', help='Directory to save blocks (for data editing)')
     parser.add_argument('--s3-bucket', help='S3 bucket name')
     parser.add_argument('--dynamodb-table', help='DynamoDB table name')
     
@@ -454,7 +474,9 @@ def main():
         result = pipeline.process_file(
             args.input_file,
             args.block_size,
-            upload_to_cloud=not args.local_only
+            upload_to_cloud=not args.local_only,
+            blocks_dir=args.blocks_dir,
+            upload_id=args.upload_id
         )
         
         if result.get('cloud_upload_success', False):
