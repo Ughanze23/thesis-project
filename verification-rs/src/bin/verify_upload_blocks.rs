@@ -109,7 +109,7 @@ fn main() -> Result<()> {
             continue;
         }
         
-        println!("✅ Traditional verification: PASSED ({:.2}ms)", traditional_time.as_millis());
+        println!("✅ Traditional verification: PASSED ({:.1}μs)", traditional_time.as_micros());
         
         // Generate STARK proof
         println!("⚡ Generating STARK proof...");
@@ -121,9 +121,9 @@ fn main() -> Result<()> {
             &root_hash,
         )?;
         let prove_time = prove_start.elapsed();
-        total_generation_time += prove_time.as_millis();
+        total_generation_time += prove_time.as_micros();
         
-        println!("✅ STARK proof generated ({:.2}ms)", prove_time.as_millis());
+        println!("✅ STARK proof generated ({:.1}μs)", prove_time.as_micros());
         println!("   Proof size: {} bytes", stark_proof.proof_size_bytes);
         println!("   Security level: {} bits", stark_proof.security_level);
         total_proof_size += stark_proof.proof_size_bytes;
@@ -138,14 +138,14 @@ fn main() -> Result<()> {
             block.authentication_path.len(),
         )?;
         let verify_time = verify_start.elapsed();
-        total_verification_time += verify_time.as_millis();
+        total_verification_time += verify_time.as_micros();
         
         if zk_result {
-            println!("✅ Zero-knowledge verification: PASSED ({:.2}ms)", verify_time.as_millis());
-            verification_results.push((block_index, true, stark_proof.proof_size_bytes, prove_time.as_millis(), verify_time.as_millis()));
+            println!("✅ Zero-knowledge verification: PASSED ({:.1}μs)", verify_time.as_micros());
+            verification_results.push((block_index, true, stark_proof.proof_size_bytes, prove_time.as_micros(), verify_time.as_micros()));
         } else {
             println!("❌ Zero-knowledge verification: FAILED");
-            verification_results.push((block_index, false, stark_proof.proof_size_bytes, prove_time.as_millis(), verify_time.as_millis()));
+            verification_results.push((block_index, false, stark_proof.proof_size_bytes, prove_time.as_micros(), verify_time.as_micros()));
         }
     }
     
@@ -162,11 +162,11 @@ fn main() -> Result<()> {
     
     if total_verifications > 0 {
         println!("📊 Total proof size: {} bytes ({:.2} KB)", total_proof_size, total_proof_size as f64 / 1024.0);
-        println!("⏱️  Total generation time: {} ms", total_generation_time);
-        println!("⏱️  Total verification time: {} ms", total_verification_time);
+        println!("⏱️  Total generation time: {} μs ({:.2} ms)", total_generation_time, total_generation_time as f64 / 1000.0);
+        println!("⏱️  Total verification time: {} μs ({:.2} ms)", total_verification_time, total_verification_time as f64 / 1000.0);
         println!("📈 Average proof size: {} bytes", total_proof_size / total_verifications);
-        println!("📈 Average generation time: {} ms", total_generation_time / total_verifications as u128);
-        println!("📈 Average verification time: {} ms", total_verification_time / total_verifications as u128);
+        println!("📈 Average generation time: {} μs", total_generation_time / total_verifications as u128);
+        println!("📈 Average verification time: {} μs", total_verification_time / total_verifications as u128);
         
         // Privacy analysis
         let traditional_path_size = blocks.iter()

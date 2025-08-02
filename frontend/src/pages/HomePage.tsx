@@ -21,12 +21,6 @@ export function HomePage() {
       color: 'from-blue-500 to-blue-600'
     },
     {
-      icon: EyeSlashIcon,
-      title: 'Privacy Preserving',
-      description: 'Authentication paths remain hidden while still proving block membership.',
-      color: 'from-purple-500 to-purple-600'
-    },
-    {
       icon: ClockIcon,
       title: 'Efficient Auditing',
       description: 'Sample only a fraction of blocks while maintaining 95% confidence detection.',

@@ -525,62 +525,76 @@ async def get_audit_status(audit_id: str):
         total_verify_time = 0
         
         if tampering_detected:
-            # Parse tampering details from output
+            # Since tampering was detected, we need to parse differently
+            # Let's use the same parsing logic as successful case but mark as tampering
             output_lines = stark_output.split('\n')
-            blocks_failed = 0
-            blocks_passed = 0
-            verification_results = []
-            
-            # Parse block-by-block results for tampering
-            current_block_index = None
-            current_block_id = None
+            current_block = {}
             
             for line in output_lines:
                 line = line.strip()
                 
-                # Parse block verification start
+                # Parse block verification details (same as success case)
                 if line.startswith('🔍 VERIFYING BLOCK'):
-                    try:
-                        # Extract block index and ID: "🔍 VERIFYING BLOCK 0: block_0001"
-                        parts = line.split(':')
-                        if len(parts) >= 2:
-                            block_part = parts[0]  # "🔍 VERIFYING BLOCK 0"
-                            block_id = parts[1].strip()  # "block_0001"
-                            
-                            # Extract block index
-                            index_part = block_part.split('BLOCK')[1].strip()
-                            current_block_index = int(index_part)
-                            current_block_id = block_id
-                    except:
-                        pass
-                
-                elif "TAMPERING DETECTED! Block" in line and current_block_index is not None:
-                    blocks_failed += 1
-                    verification_results.append({
-                        'blockId': current_block_id or f"block_{current_block_index:04d}",
-                        'blockIndex': current_block_index,
-                        'verificationPassed': False,
-                        'verificationTimeMs': 0,
-                        'starkProofSize': 0,
-                        'generationTimeMs': 0,
-                        'tamperingDetected': True
-                    })
-                    current_block_index = None
-                    current_block_id = None
+                    if current_block:  # Save previous block
+                        verification_results.append(current_block)
                     
-                elif "✅ Zero-knowledge verification: PASSED" in line and current_block_index is not None:
-                    blocks_passed += 1
-                    verification_results.append({
-                        'blockId': current_block_id or f"block_{current_block_index:04d}",
-                        'blockIndex': current_block_index,
-                        'verificationPassed': True,
-                        'verificationTimeMs': 50,  # Approximate
-                        'starkProofSize': 2409,  # Approximate
-                        'generationTimeMs': 100,  # Approximate
-                        'tamperingDetected': False
-                    })
-                    current_block_index = None
-                    current_block_id = None
+                    # Extract block info
+                    parts = line.split(':')
+                    if len(parts) >= 2:
+                        block_info = parts[1].strip()
+                        block_index = int(line.split('BLOCK')[1].split(':')[0].strip())
+                        current_block = {
+                            'blockId': block_info,
+                            'blockIndex': block_index,
+                            'verificationPassed': False,  # Will be updated if passed
+                            'verificationTimeMs': 0,
+                            'starkProofSize': 0,
+                            'generationTimeMs': 0,
+                            'tamperingDetected': True  # Default to tampering detected
+                        }
+                
+                elif 'Traditional verification: PASSED' in line:
+                    if current_block:
+                        current_block['traditionalPassed'] = True
+                
+                elif 'STARK proof generated' in line and 'μs' in line:
+                    if current_block:
+                        try:
+                            time_part = line.split('(')[1].split('μs')[0]
+                            current_block['generationTimeMs'] = int(float(time_part)) / 1000 if time_part.replace('.','').isdigit() else 0
+                        except:
+                            current_block['generationTimeMs'] = 0
+                
+                elif 'Proof size:' in line and 'bytes' in line:
+                    if current_block:
+                        try:
+                            size_part = line.split('size:')[1].split('bytes')[0].strip()
+                            current_block['starkProofSize'] = int(size_part)
+                        except:
+                            current_block['starkProofSize'] = 2409  # Default
+                
+                elif 'Zero-knowledge verification: PASSED' in line and 'μs' in line:
+                    if current_block:
+                        try:
+                            time_part = line.split('(')[1].split('μs')[0]
+                            current_block['verificationTimeMs'] = int(float(time_part)) / 1000 if time_part.replace('.','').isdigit() else 0
+                            current_block['verificationPassed'] = True
+                            current_block['tamperingDetected'] = False  # This specific block passed
+                            blocks_verified += 1
+                        except:
+                            current_block['verificationTimeMs'] = 0
+                            current_block['verificationPassed'] = True
+                            blocks_verified += 1
+                
+                elif 'Zero-knowledge verification: FAILED' in line:
+                    if current_block:
+                        current_block['verificationPassed'] = False
+                        current_block['tamperingDetected'] = True
+                        blocks_failed += 1
+            
+            # Don't forget the last block
+            if current_block:
+                verification_results.append(current_block)
             
             total_blocks_audited = blocks_failed + blocks_passed
             
@@ -640,11 +654,11 @@ async def get_audit_status(audit_id: str):
                     if current_block:
                         current_block['traditionalPassed'] = True
                 
-                elif 'STARK proof generated' in line and 'ms' in line:
+                elif 'STARK proof generated' in line and 'μs' in line:
                     if current_block:
                         try:
-                            time_part = line.split('(')[1].split('ms')[0]
-                            current_block['generationTimeMs'] = int(float(time_part)) if time_part.isdigit() else 0
+                            time_part = line.split('(')[1].split('μs')[0]
+                            current_block['generationTimeMs'] = int(float(time_part)) / 1000 if time_part.replace('.','').isdigit() else 0
                         except:
                             current_block['generationTimeMs'] = 0
                 
@@ -657,11 +671,11 @@ async def get_audit_status(audit_id: str):
                         except:
                             current_block['starkProofSize'] = 3173  # Default from logs
                 
-                elif 'Zero-knowledge verification: PASSED' in line and 'ms' in line:
+                elif 'Zero-knowledge verification: PASSED' in line and 'μs' in line:
                     if current_block:
                         try:
-                            time_part = line.split('(')[1].split('ms')[0]
-                            current_block['verificationTimeMs'] = int(float(time_part)) if time_part.isdigit() else 0
+                            time_part = line.split('(')[1].split('μs')[0]
+                            current_block['verificationTimeMs'] = int(float(time_part)) / 1000 if time_part.replace('.','').isdigit() else 0
                             current_block['verificationPassed'] = True
                             blocks_verified += 1
                         except:

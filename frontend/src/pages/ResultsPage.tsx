@@ -200,7 +200,9 @@ export function ResultsPage() {
               {Math.round(results.statistics.totalTimeMs / 1000)}s
             </p>
             <p className="text-sm text-gray-600">
-              avg {results.statistics.averageVerificationTimeMs}ms per block
+              avg {results.statistics.averageVerificationTimeMs < 1 
+                ? `${(results.statistics.averageVerificationTimeMs * 1000).toFixed(0)}μs`
+                : `${results.statistics.averageVerificationTimeMs.toFixed(1)}ms`} per block
             </p>
           </div>
 
@@ -296,8 +298,18 @@ export function ResultsPage() {
                     <div>✅ Successful proofs: {results.statistics.blocksPassed}</div>
                     <div>❌ Failed proofs: {results.statistics.blocksFailed}</div>
                     <div>🔒 Total proof size: {results.statistics.totalProofSize || 'N/A'} bytes</div>
-                    <div>⚡ Average generation time: {results.verificationResults[0]?.generationTimeMs || 0}ms per block</div>
-                    <div>🔍 Average verification time: {results.statistics.averageVerificationTimeMs}ms per block</div>
+                    <div>⚡ Average generation time: {
+                      results.verificationResults[0]?.generationTimeMs && results.verificationResults[0].generationTimeMs > 0
+                        ? results.verificationResults[0].generationTimeMs < 1 
+                          ? `${(results.verificationResults[0].generationTimeMs * 1000).toFixed(0)}μs`
+                          : `${results.verificationResults[0].generationTimeMs.toFixed(1)}ms`
+                        : '0μs'
+                    } per block</div>
+                    <div>🔍 Average verification time: {
+                      results.statistics.averageVerificationTimeMs < 1 
+                        ? `${(results.statistics.averageVerificationTimeMs * 1000).toFixed(0)}μs`
+                        : `${results.statistics.averageVerificationTimeMs.toFixed(1)}ms`
+                    } per block</div>
                     <div className="text-green-400">✓ Zero-knowledge property: MAINTAINED</div>
                     <div className="text-green-400">✓ Privacy: 100% authentication paths hidden</div>
                     {results.statistics.tamperingDetected ? (
@@ -361,10 +373,18 @@ export function ResultsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {result.generationTimeMs || 0}ms
+                      {result.generationTimeMs && result.generationTimeMs > 0 
+                        ? result.generationTimeMs < 1 
+                          ? `${(result.generationTimeMs * 1000).toFixed(0)}μs`
+                          : `${result.generationTimeMs.toFixed(1)}ms`
+                        : '0μs'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {result.verificationTimeMs}ms
+                      {result.verificationTimeMs && result.verificationTimeMs > 0 
+                        ? result.verificationTimeMs < 1 
+                          ? `${(result.verificationTimeMs * 1000).toFixed(0)}μs`
+                          : `${result.verificationTimeMs.toFixed(1)}ms`
+                        : '0μs'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {result.starkProofSize} bytes
