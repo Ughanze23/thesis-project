@@ -4,40 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "verify_blocks"
-path = "src/bin/verify_blocks.rs"
-
-[[bin]]
-name = "tamper_test"
-path = "src/bin/tamper_test.rs"
-
-[[bin]]
-name = "stark_prove"
-path = "src/bin/stark_prove.rs"
-
-[[bin]]
-name = "stark_verify"
-path = "src/bin/stark_verify.rs"
-
-[[bin]]
-name = "simple_stark_prove"
-path = "src/bin/simple_stark_prove.rs"
-
-[[bin]]
-name = "simple_stark_verify"
-path = "src/bin/simple_stark_verify.rs"
-
-[[bin]]
-name = "test_stark"
-path = "src/bin/test_stark.rs"
-
-[[bin]]
-name = "benchmark_stark"
-path = "src/bin/benchmark_stark.rs"
-
-[[bin]]
-name = "demo_zk_verification"
-path = "src/bin/demo_zk_verification.rs"
+name = "verify_upload_blocks"
+path = "src/bin/verify_upload_blocks.rs"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

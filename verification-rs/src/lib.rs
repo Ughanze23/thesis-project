@@ -5,7 +5,6 @@ use std::fs;
 use std::path::Path;
 
 // STARK implementation modules
-pub mod simple_stark;
 pub mod stark;
 
 #[derive(Debug, Deserialize, Serialize)]

@@ -1,1 +1,0 @@
-/Users/tobi/Desktop/projects/ik-thesis/thesis/verification-rs/target/debug/simple_stark_prove: /Users/tobi/Desktop/projects/ik-thesis/thesis/verification-rs/src/bin/simple_stark_prove.rs /Users/tobi/Desktop/projects/ik-thesis/thesis/verification-rs/src/lib.rs /Users/tobi/Desktop/projects/ik-thesis/thesis/verification-rs/src/simple_stark.rs

@@ -14,7 +14,7 @@ cargo:rerun-if-env-changed=CARGO_FEATURE_NEON
 cargo:rerun-if-env-changed=CARGO_FEATURE_NO_NEON
 cargo:rerun-if-env-changed=CARGO_FEATURE_PURE
 cargo:rustc-cfg=blake3_neon
-OUT_DIR = Some(/Users/tobi/Desktop/projects/ik-thesis/thesis/verification-rs/target/release/build/blake3-ad73f6b6afdb0e7e/out)
+OUT_DIR = Some(/Users/tobi/Desktop/projects/thesis/verification-rs/target/release/build/blake3-ad73f6b6afdb0e7e/out)
 OPT_LEVEL = Some(3)
 TARGET = Some(aarch64-apple-darwin)
 HOST = Some(aarch64-apple-darwin)
@@ -41,7 +41,7 @@ HOST_ARFLAGS = None
 ARFLAGS_aarch64_apple_darwin = None
 ARFLAGS_aarch64-apple-darwin = None
 cargo:rustc-link-lib=static=blake3_neon
-cargo:rustc-link-search=native=/Users/tobi/Desktop/projects/ik-thesis/thesis/verification-rs/target/release/build/blake3-ad73f6b6afdb0e7e/out
+cargo:rustc-link-search=native=/Users/tobi/Desktop/projects/thesis/verification-rs/target/release/build/blake3-ad73f6b6afdb0e7e/out
 cargo:rerun-if-env-changed=CC
 cargo:rerun-if-env-changed=CFLAGS
 cargo:rerun-if-changed=c/blake3_sse41_x86-64_windows_msvc.asm
