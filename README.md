@@ -104,27 +104,21 @@ This includes:
 - Data ingestion and block creation
 - Random block selection with 95% confidence
 - Zero-knowledge STARK proof generation/verification
-- Tampering detection testing
-- Performance analysis
+- Real-time monitoring and visualization
 
-### 4. Testing Individual Components
-
-**Test STARK verification system:**
-```bash
-cd verification-rs
-cargo run --bin demo_zk_verification
-```
-
-**Test tampering detection:**
-```bash
-python3 test_tampering.py
-```
+### 4. Testing the System
 
 **Run Rust tests:**
 ```bash
 cd verification-rs
 cargo test
 ```
+
+**Test the verification system manually:**
+- Upload a CSV file through the web interface
+- Start an audit with your preferred confidence level
+- Monitor the real-time verification progress
+- View the detailed results and performance metrics
 
 ### 5. Cloud Deployment (Optional)
 
@@ -178,24 +172,23 @@ The verification system (`verification-rs/`) handles:
 - STARK proof generation/verification
 - Block integrity checking
 
-**Key binaries:**
-```bash
-cargo run --bin verify_upload_blocks    # Verify specific blocks
-cargo run --bin demo_zk_verification    # Demo verification
-cargo run --bin test_stark              # Test STARK system
-```
+**Core functionality:**
+- Zero-knowledge STARK proof generation and verification
+- Merkle tree validation and integrity checking  
+- Integration with the FastAPI backend for seamless web UI operation
 
 ## 📂 Project Structure
 
 ```
 thesis/
 ├── README.md                          # This file
-├── demo.py                            # Complete end-to-end demo
-├── verification-rs/                   # Original STARK implementation
+├── fastapi-server.py                  # Backend API server
+├── verification-rs/                   # STARK verification system
 │   ├── src/
 │   │   ├── lib.rs                     # Core Merkle/STARK functions
 │   │   ├── stark.rs                   # STARK proof system
-│   │   └── bin/                       # Executable demos
+│   │   └── bin/
+│   │       └── verify_upload_blocks.rs # Main verification binary
 │   └── Cargo.toml
 ├── cloud_data_ingestion.py           # Cloud-compatible data pipeline
 ├── random_block_selector.py          # 95% confidence block selection
@@ -307,11 +300,11 @@ thesis/
 # Run all Rust tests
 cd verification-rs && cargo test
 
-# Test tampering detection
-python3 test_tampering.py
-
 # Frontend testing  
 cd frontend && npm test
+
+# Backend API testing
+# Visit http://localhost:8000/docs for interactive API testing
 ```
 
 ### Manual Testing Scenarios
@@ -320,7 +313,7 @@ cd frontend && npm test
 - Upload dataset → Generate blocks → Run audit → Verify results
 
 **2. Tampering Detection**
-- Modify block data → Run audit → Confirm tampering detected
+- Upload a dataset → Manually modify block files in `upload_blocks/` → Run audit → Confirm tampering detected
 
 **3. Performance Testing**
 - Large datasets → Measure timing → Validate efficiency
@@ -330,29 +323,25 @@ cd frontend && npm test
 
 ## 🚀 Deployment Options
 
-### Option 1: Local Web Application
+### Option 1: Web Application (Recommended)
 ```bash
 # Terminal 1: Start backend
 python3 fastapi-server.py
 
 # Terminal 2: Start frontend  
 cd frontend && npm start
+
+# Open http://localhost:3000 in your browser
 ```
 
-### Option 2: Command Line Demo
-```bash
-python3 demo.py  # Complete local demo
-cd verification-rs && cargo run --bin demo_zk_verification
-```
-
-### Option 3: AWS Cloud Deployment
+### Option 2: AWS Cloud Deployment
 ```bash
 cd infrastructure && ./deploy.sh  # Full AWS infrastructure
 cd lambda-functions && ./build.sh  # Lambda functions
 cd frontend && npm run build  # Frontend build
 ```
 
-### Option 4: Container Deployment
+### Option 3: Container Deployment
 ```bash
 # Lambda functions use containerized deployment
 docker build -t zk-audit-lambda .
@@ -412,7 +401,7 @@ collector.create_custom_dashboard()
 
 1. **Development Setup**
    - Install all prerequisites
-   - Run `python3 demo.py` to verify setup
+   - Start the web application to verify setup
    - Make changes in feature branches
 
 2. **Code Standards**
@@ -440,8 +429,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 - **Documentation**: Complete README files in each component directory
-- **Demo Script**: `python3 demo.py` for guided walkthrough  
-- **Test Scripts**: Comprehensive testing for all components
+- **Web Interface**: Interactive frontend for easy testing and validation
+- **API Documentation**: Visit `http://localhost:8000/docs` for comprehensive API docs
 - **GitHub Issues**: Bug reports and feature requests
 - **Community**: Join discussions about ZK proofs and data integrity
 
