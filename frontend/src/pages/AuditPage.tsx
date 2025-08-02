@@ -26,17 +26,21 @@ export function AuditPage() {
       try {
         const uploads = await apiService.getUploads();
         uploads.forEach((upload: any) => {
-          const uploadData: UploadData = {
-            uploadId: upload.upload_id,
-            userId: upload.user_id,
-            fileName: upload.filename,
-            totalBlocks: upload.total_blocks,
-            dataBlocks: upload.data_blocks,
-            rootHash: upload.root_hash,
-            timestamp: upload.timestamp,
-            sizeMB: upload.file_size_mb,
-          };
-          actions.addUpload(uploadData);
+          // Check if upload already exists to avoid duplicates
+          const existingUpload = state.uploads.find(u => u.uploadId === upload.upload_id);
+          if (!existingUpload) {
+            const uploadData: UploadData = {
+              uploadId: upload.upload_id,
+              userId: upload.user_id,
+              fileName: upload.filename,
+              totalBlocks: upload.total_blocks,
+              dataBlocks: upload.data_blocks,
+              rootHash: upload.root_hash,
+              timestamp: upload.timestamp,
+              sizeMB: upload.file_size_mb,
+            };
+            actions.addUpload(uploadData);
+          }
         });
       } catch (error) {
         console.error('Failed to load uploads:', error);
@@ -44,10 +48,8 @@ export function AuditPage() {
       }
     };
 
-    if (state.uploads.length === 0) {
-      loadUploads();
-    }
-  }, [state.uploads.length, actions]);
+    loadUploads();
+  }, [state.uploads, actions]); // Check uploads to avoid duplicates
 
   // Calculate sample size based on confidence level and corruption rate
   const calculateSampleSize = (totalBlocks: number, confidence: number, corruptionRate: number) => {
@@ -91,6 +93,7 @@ export function AuditPage() {
           
           // statusData is already the audit_data object from the API service
           const auditInfo = statusData;
+          
           
           if (auditInfo.status === 'success' || auditInfo.status === 'failed') {
             const completedAudit: Partial<AuditData> = {
