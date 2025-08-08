@@ -38,7 +38,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -151,7 +151,7 @@ async def upload_dataset(file: UploadFile = File(...)):
                 '--upload-id', upload_id,
                 '--block-size', '2.0',
                 '--blocks-dir', str(blocks_dir)
-            ], capture_output=True, text=True, cwd=project_root, timeout=60)
+            ], capture_output=True, text=True, cwd=project_root, timeout=1800)
             
             # Initialize variables for both success and failure cases
             total_blocks = max(4, int(file_size_mb / 2))
@@ -301,7 +301,7 @@ async def start_audit(request: AuditStartRequest):
             ]
             logger.info(f"🎲 BLOCK SELECTION: Running command: {' '.join(cmd)}")
             
-            result = subprocess.run(cmd, capture_output=True, text=True, cwd=project_root, timeout=30)
+            result = subprocess.run(cmd, capture_output=True, text=True, cwd=project_root, timeout=600)
             
             if result.returncode != 0:
                 logger.error(f"❌ BLOCK SELECTION: Failed with return code {result.returncode}")
@@ -455,7 +455,7 @@ async def get_audit_status(audit_id: str):
                     logger.info(f"🔒 REAL STARK VERIFICATION: Running command: {' '.join(cmd)}")
                     
                     start_time = datetime.now()
-                    result = subprocess.run(cmd, capture_output=True, text=True, cwd=project_root, timeout=60)
+                    result = subprocess.run(cmd, capture_output=True, text=True, cwd=project_root, timeout=1800)
                     end_time = datetime.now()
                     
                     verification_time = (end_time - start_time).total_seconds()
@@ -476,6 +476,7 @@ async def get_audit_status(audit_id: str):
                         # Parse verification results
                         output_lines = result.stdout.split('\n')
                         blocks_verified = 0
+                        blocks_failed = 0
                         total_proof_size = 0
                         
                         for line in output_lines:
@@ -483,6 +484,12 @@ async def get_audit_status(audit_id: str):
                                 try:
                                     blocks_verified = int(line.split(':')[1].strip())
                                     logger.info(f"✅ REAL STARK VERIFICATION: {blocks_verified} blocks successfully verified")
+                                except:
+                                    pass
+                            elif "Failed verifications:" in line:
+                                try:
+                                    blocks_failed = int(line.split(':')[1].strip())
+                                    logger.info(f"❌ REAL STARK VERIFICATION: {blocks_failed} blocks failed verification")
                                 except:
                                     pass
                             elif "Total proof size:" in line:
@@ -596,7 +603,7 @@ async def get_audit_status(audit_id: str):
             if current_block:
                 verification_results.append(current_block)
             
-            total_blocks_audited = blocks_failed + blocks_passed
+            total_blocks_audited = blocks_failed + blocks_verified
             
             # Handle tampering detection
             audit_info.update({
@@ -610,11 +617,11 @@ async def get_audit_status(audit_id: str):
                     'statistics': {
                         'totalBlocks': len(audit_info['selected_blocks']),
                         'blocksAudited': total_blocks_audited,
-                        'blocksPassed': blocks_passed,
+                        'blocksPassed': blocks_verified,
                         'blocksFailed': blocks_failed,
                         'totalTimeMs': int(verification_time * 1000),
                         'averageVerificationTimeMs': int(verification_time * 1000 / max(1, total_blocks_audited)),
-                        'totalProofSize': blocks_passed * 2409,  # Approximate proof size
+                        'totalProofSize': blocks_verified * 2409,  # Approximate proof size
                         'averageProofSize': 2409,
                         'confidenceLevel': f"{audit_info['confidence_level']}%",
                         'tamperingDetected': True
@@ -694,6 +701,12 @@ async def get_audit_status(audit_id: str):
                     except:
                         pass
                 
+                elif 'Failed verifications:' in line:
+                    try:
+                        blocks_failed = int(line.split(':')[1].strip())
+                    except:
+                        pass
+                
                 elif 'Total generation time:' in line:
                     try:
                         total_gen_time = int(line.split(':')[1].strip().split()[0])
@@ -728,10 +741,10 @@ async def get_audit_status(audit_id: str):
         
         # Update audit with REAL results
         audit_info.update({
-            'status': 'success' if stark_success else 'failed',
+            'status': 'failed' if blocks_failed > 0 else 'success',
             'end_time': datetime.now().isoformat(),
             'results': {
-                'overallSuccess': stark_success,
+                'overallSuccess': blocks_failed == 0,
                 'tamperingDetected': blocks_failed > 0,
                 'verificationResults': verification_results,
                 'rawStarkOutput': stark_output,  # Include raw output for debugging
@@ -913,7 +926,7 @@ if __name__ == "__main__":
     # Start the server
     uvicorn.run(
         "fastapi-server:app",
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=8000,
         reload=False,
         log_level="info"

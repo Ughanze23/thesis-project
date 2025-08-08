@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Backend FastAPI service for production
+  zk-audit-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zk-audit-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - upload_blocks:/app/upload_blocks
+      - merkle_commitments:/app/merkle_commitments
+      - logs:/app/logs
+    environment:
+      - FASTAPI_ENV=production
+      - LOG_LEVEL=info
+      - PYTHONUNBUFFERED=1
+    networks:
+      - zk-audit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Frontend React service for production
+  zk-audit-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=/api
+    container_name: zk-audit-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - zk-audit-backend
+    networks:
+      - zk-audit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+networks:
+  zk-audit-network:
+    driver: bridge
+
+volumes:
+  upload_blocks:
+    driver: local
+  merkle_commitments:
+    driver: local
+  logs:
+    driver: local

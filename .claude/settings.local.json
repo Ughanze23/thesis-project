@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "Bash(chmod:*)",
@@ -18,9 +19,26 @@
       "Bash(pkill:*)",
       "Bash(mkdir:*)",
       "Bash(find:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(docker build:*)",
+      "Bash(docker run:*)",
+      "Bash(docker rm:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose build:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker tag:*)",
+      "Bash(./ec2-deploy.sh)",
+      "Bash(aws ec2 describe-images:*)",
+      "Bash(aws ec2 run-instances:*)",
+      "Bash(aws ec2 wait:*)",
+      "Bash(aws ec2 describe-instances:*)",
+      "Bash(scp:*)",
+      "Bash(tar:*)",
+      "Bash(ssh:*)",
+      "Bash(REACT_APP_API_URL=http://44.246.246.240:8000/api npm run build)"
     ],
     "deny": []
-  },
-  "$schema": "https://json.schemastore.org/claude-code-settings.json"
+  }
 }

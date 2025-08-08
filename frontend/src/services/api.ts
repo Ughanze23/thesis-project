@@ -2,11 +2,11 @@
 import axios from 'axios';
 
 // Configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://44.246.246.240:8000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 30 seconds
+  timeout: 300000, // 5 minutes
   headers: {
     'Content-Type': 'application/json',
   },
@@ -77,6 +77,12 @@ export const apiService = {
       const response = await api.post('/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+        },
+        timeout: 600000, // 10 minutes for file uploads
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            console.log('Upload progress:', Math.round((progressEvent.loaded * 100) / progressEvent.total) + '%');
+          }
         },
       });
 
