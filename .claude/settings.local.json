@@ -37,7 +37,8 @@
       "Bash(scp:*)",
       "Bash(tar:*)",
       "Bash(ssh:*)",
-      "Bash(REACT_APP_API_URL=http://44.246.246.240:8000/api npm run build)"
+      "Bash(REACT_APP_API_URL=http://44.246.246.240:8000/api npm run build)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }

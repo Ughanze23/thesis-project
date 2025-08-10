@@ -301,7 +301,7 @@ def run_block_selection(total_blocks, upload_id, confidence=0.95, min_corruption
             logger.warning(f"⚠️  Block selection failed, using fallback")
             logger.warning(f"stderr: {result.stderr}")
             # Fallback: select first few blocks
-            sample_size = min(8, total_blocks)
+            sample_size = 100
             selected_blocks = list(range(sample_size))
             return selected_blocks, sample_size
         
@@ -374,12 +374,12 @@ def run_stark_verification(upload_id, selected_blocks, blocks_dir, commitment_fi
         # Convert selected blocks to JSON string
         selected_blocks_json = json.dumps(selected_blocks)
         
-        # Run the verification binary
+        # Run the verification binary with absolute path
         cmd = [
             'cargo', 'run', '--bin', 'verify_upload_blocks', '--',
             upload_id,
             selected_blocks_json,
-            str(commitment_file)
+            str(commitment_file.resolve())  # Use absolute path
         ]
         
         logger.info(f"🔒 Running STARK verification: {' '.join(cmd)}")
@@ -563,14 +563,15 @@ def main():
         )
         commitment_file_path = save_commitment_file(commitment_data, upload_id)
         
-        # Step 3: Run block selection algorithm
-        print_step(3, "Running random block selection")
-        selected_blocks, sample_size = run_block_selection(
-            file_info['total_blocks'], 
-            upload_id, 
-            confidence=0.95, 
-            min_corruption=0.05
-        )
+        # Step 3: Select all blocks for comprehensive audit
+        print_step(3, "Selecting all blocks for comprehensive audit")
+        selected_blocks = list(range(file_info['total_blocks']))
+        sample_size = file_info['total_blocks']
+        
+        print(f"🎯 Comprehensive audit selected:")
+        print(f"   🔢 Total blocks to audit: {sample_size}")
+        print(f"   📊 Coverage: 100% (all blocks)")
+        print(f"   📋 Block range: 0-{file_info['total_blocks']-1}")
         
         # Step 4: Run STARK verification
         print_step(4, "Performing STARK verification")
