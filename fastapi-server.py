@@ -593,15 +593,31 @@ async def get_audit_status(audit_id: str):
                             current_block['verificationPassed'] = True
                             blocks_verified += 1
                 
-                elif 'Zero-knowledge verification: FAILED' in line:
+                elif 'Zero-knowledge verification: FAILED' in line or 'TAMPERING DETECTED' in line or 'verification failed' in line.lower():
                     if current_block:
                         current_block['verificationPassed'] = False
                         current_block['tamperingDetected'] = True
                         blocks_failed += 1
+                
+                # Also check for explicit "Failed verifications:" summary line
+                elif 'Failed verifications:' in line:
+                    try:
+                        failed_count = int(line.split(':')[1].strip())
+                        if failed_count > blocks_failed:
+                            blocks_failed = failed_count
+                            logger.info(f"📊 TAMPERING PARSING: Found explicit failed count: {failed_count}")
+                    except:
+                        pass
             
             # Don't forget the last block
             if current_block:
                 verification_results.append(current_block)
+            
+            # Fallback calculation: if tampering was detected but blocks_failed is 0, 
+            # calculate it as the difference between total selected and verified
+            if blocks_failed == 0 and tampering_detected:
+                blocks_failed = len(audit_info['selected_blocks']) - blocks_verified
+                logger.warning(f"⚠️ TAMPERING PARSING: Fallback calculation - setting blocks_failed = {blocks_failed}")
             
             total_blocks_audited = blocks_failed + blocks_verified
             
@@ -616,7 +632,7 @@ async def get_audit_status(audit_id: str):
                     'rawStarkOutput': stark_output,
                     'statistics': {
                         'totalBlocks': len(audit_info['selected_blocks']),
-                        'blocksAudited': total_blocks_audited,
+                        'blocksAudited': len(audit_info['selected_blocks']),
                         'blocksPassed': blocks_verified,
                         'blocksFailed': blocks_failed,
                         'totalTimeMs': int(verification_time * 1000),
@@ -750,7 +766,7 @@ async def get_audit_status(audit_id: str):
                 'rawStarkOutput': stark_output,  # Include raw output for debugging
                 'statistics': {
                     'totalBlocks': len(audit_info['selected_blocks']),
-                    'blocksAudited': blocks_verified + blocks_failed,
+                    'blocksAudited': len(audit_info['selected_blocks']),
                     'blocksPassed': blocks_verified,
                     'blocksFailed': blocks_failed,
                     'totalTimeMs': int(verification_time * 1000),

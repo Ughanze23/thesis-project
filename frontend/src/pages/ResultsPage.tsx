@@ -57,9 +57,14 @@ export function ResultsPage() {
     proofSize: result.starkProofSize,
   })) || [];
 
+  const blocksAudited = results?.statistics.blocksAudited || 0;
+  const blocksPassed = results?.statistics.blocksPassed || 0;
+  const tamperingDetected = blocksAudited - blocksPassed;
+
+
   const statusData = [
-    { name: 'Passed', value: results?.statistics.blocksPassed || 0, color: '#10B981' },
-    { name: 'Failed', value: results?.statistics.blocksFailed || 0, color: '#EF4444' },
+    { name: 'Passed', value: blocksPassed || 0, color: '#10B981' },
+    { name: 'Failed', value: tamperingDetected || 0, color: '#EF4444' },
   ];
 
   // Timeline data for future use
@@ -69,6 +74,7 @@ export function ResultsPage() {
   //   cumulative: (i + 1) * 2000 + Math.random() * 1000,
   // }));
 
+  console.log('test: ', blocksAudited, blocksPassed, tamperingDetected)
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
@@ -137,7 +143,7 @@ export function ResultsPage() {
               }`}>
                 {results.overallSuccess 
                   ? 'All sampled blocks verified successfully. No data tampering detected.'
-                  : `${results.statistics.blocksFailed} blocks failed verification. Data integrity compromised.`
+                  : `${results.statistics.blocksAudited-results.statistics.blocksPassed} blocks failed verification. Data integrity compromised.`
                 }
               </p>
             </div>
@@ -368,7 +374,7 @@ export function ResultsPage() {
                       ) : (
                         <div className="flex items-center space-x-2">
                           <XCircleIcon className="h-4 w-4 text-red-600" />
-                          <span className="text-red-800 text-sm">{result.tamperingDetected ? 'TAMPERED' : 'Failed'}</span>
+                          <span className="text-red-800 text-sm">{ tamperingDetected > 0 ? 'TAMPERED' : 'Failed'}</span>
                         </div>
                       )}
                     </td>
